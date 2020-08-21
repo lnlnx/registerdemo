@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createUseStyles } from "react-jss";
+import { Redirect } from "react-router-dom";
 import Input, { InputProps, ValidationRule } from "./UI/Input";
+import { Auth } from "../Firebase";
 import { styles } from "../assets/jss/SignupStyles";
 import Button from "./UI/Button";
 import poster from "../assets/img/poster.png";
@@ -28,6 +30,7 @@ export const validateInput = (input: InputProps): boolean => {
 
 const Signup = () => {
   const classes = useStyles();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isSubmitDisabled, setIsSubmitDisabled] = React.useState(true);
   const [agreeTerm, setAgreeTerm] = useState<boolean>(false);
   const [dataform, setDataform] = useState<InputProps[]>([
@@ -78,15 +81,11 @@ const Signup = () => {
     },
   ]);
 
-  const validateForm = (): void => {
+  useEffect(() => {
     const formIsValid = dataform.every((input: InputProps): boolean =>
       validateInput(input)
     );
     setIsSubmitDisabled(!formIsValid || !agreeTerm);
-  };
-
-  useEffect(() => {
-    validateForm();
   }, [dataform, agreeTerm]);
 
   const inputChangeHandler = (
@@ -105,10 +104,17 @@ const Signup = () => {
 
   const submitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(dataform);
-    const email = dataform[0].value;
-    const password = dataform[2].value;
-    console.log(email);
+    const email = dataform[2].inputValue;
+    const password = dataform[3].inputValue;
+
+    Auth.createUserWithEmailAndPassword(email, password)
+      .then((response: firebase.auth.UserCredential) => {
+        setIsLoggedIn(true);
+      })
+      .catch(function (error) {
+        var errorMessage = error.message;
+        console.log(errorMessage);
+      });
   };
 
   const checkboxChangeHandler = (
@@ -144,7 +150,7 @@ const Signup = () => {
     marginLeft: "18px",
   };
 
-  return (
+  const mainBody = (
     <div className={classes.signupWrap}>
       <div className={classes.signupWrapImgWrap}>
         <img src={poster} alt="poster" />
@@ -184,6 +190,16 @@ const Signup = () => {
         </div>
       </div>
     </div>
+  );
+
+  return isLoggedIn ? (
+    <Redirect
+      to={{
+        pathname: "/main",
+      }}
+    />
+  ) : (
+    mainBody
   );
 };
 
