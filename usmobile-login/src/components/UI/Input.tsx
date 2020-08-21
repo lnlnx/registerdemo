@@ -55,11 +55,9 @@ const Input: React.FC<InputProps> = (props: InputProps) => {
         );
         return validationRule.hint
           ? [
-              <Fragment>
+              <Fragment key={validationRule.hint}>
                 {icon}
-                <span key={validationRule.hint} style={color}>
-                  {validationRule.hint}
-                </span>
+                <span style={color}>{validationRule.hint}</span>
               </Fragment>,
             ]
           : [];

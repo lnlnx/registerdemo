@@ -1,11 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { createUseStyles } from "react-jss";
 import Input, { InputProps, ValidationRule } from "./UI/Input";
 import { styles } from "../assets/jss/SignupStyles";
 import Button from "./UI/Button";
 import poster from "../assets/img/poster.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import {
   faTwitter,
   faLinkedin,
@@ -15,8 +14,21 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 const useStyles = createUseStyles(styles);
 
+export const validateInput = (input: InputProps): boolean => {
+  if (input.inputValue === "") {
+    return false;
+  } else if (input.validationRules) {
+    return input.validationRules.every((rule: ValidationRule): boolean =>
+      rule.validateFunc(input.inputValue)
+    );
+  } else {
+    return true;
+  }
+};
+
 const Signup = () => {
   const classes = useStyles();
+  const [isSubmitDisabled, setIsSubmitDisabled] = React.useState(true);
   const [agreeTerm, setAgreeTerm] = useState<boolean>(false);
   const [dataform, setDataform] = useState<InputProps[]>([
     {
@@ -66,19 +78,16 @@ const Signup = () => {
     },
   ]);
 
-  const isFormValid = (): boolean => {
-    return dataform.every((input: InputProps): boolean => {
-      if (input.inputValue === "") {
-        return false;
-      } else if (input.validationRules) {
-        return input.validationRules.every((rule: ValidationRule): boolean =>
-          rule.validateFunc(input.inputValue)
-        );
-      } else {
-        return true;
-      }
-    });
+  const validateForm = (): void => {
+    const formIsValid = dataform.every((input: InputProps): boolean =>
+      validateInput(input)
+    );
+    setIsSubmitDisabled(!formIsValid || !agreeTerm);
   };
+
+  useEffect(() => {
+    validateForm();
+  }, [dataform, agreeTerm]);
 
   const inputChangeHandler = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -170,10 +179,7 @@ const Signup = () => {
               <input type="checkbox" onChange={checkboxChangeHandler} />
               <span>Agree To the Terms & Privacy policy</span>
             </p>
-            <Button
-              buttonName={"Create User"}
-              isDisabled={!isFormValid() || !agreeTerm}
-            />
+            <Button buttonName={"Create User"} isDisabled={isSubmitDisabled} />
           </form>
         </div>
       </div>
